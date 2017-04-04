@@ -1,6 +1,22 @@
 module Brainfuck
 import Data.Vect
+import Debug.Error
 
+--------------------------------------------------
+-------------------COMPILATION--------------------
+--------------------------------------------------
+
+{-
+  Declare an abstract data type for all possible Brainfuck commands
+    INCP means INCrement Pointer
+    DECP means DECrement Pointer
+    INCD means INCrement Data
+    DECD means DECrement Data
+    OUTB means OUTput one Byte
+    ACCB means ACCept one Byte
+    JUMP means JUMP to matching right bracket if data is zero
+    BACK means go BACK to matching left bracket if data is nonzero
+-}
 data BrainfuckCommand = INCP
                       | DECP
                       | INCD
@@ -9,30 +25,72 @@ data BrainfuckCommand = INCP
                       | ACCB
                       | JUMP
                       | BACK
-                      | NULL
+{-
+  A list of acceptable keywords in Brainfuck
+  > means increment pointer
+  < means decrement pointer
+  + means increment data
+  - means decrement data
+  . means output one byte
+  , means accept one byte
+  [ means jump to right bracket if data is zero
+  ] means jump to left bracket if data is nonzero
+-}
+keywords : List Char
+keywords = ['>','<','+','-','.',',','[',']']
 
+{-
+  Given a String, this function determines
+  whether or not all symbols in the String
+  are Brainfuck commands
+-}
 correctChars : String -> Bool
 correctChars s = correctChars' $ unpack s where
   correctChars' : List Char -> Bool
   correctChars' []        = True
-  correctChars' (x :: xs) = if Prelude.List.elem x ['>','<','+','-','.',',','[',']']
+  correctChars' (x :: xs) = if Prelude.List.elem x keywords
                               then correctChars' xs
                               else False
 
+{-
+  Given a Char and a List of Chars, this
+  function determines how many times the
+  Char appears in the List
+-}
 occurences : Char -> List Char -> Int
 occurences x []        = 0
 occurences x (y :: xs) = if x == y
                            then 1 + occurences x xs
                            else occurences x xs
 
+{-
+  This function determines whether or not
+  a String contains the same number of left
+  brackets as right brackets. Having a different
+  number of left and right brackets doesn't
+  necessarily mean the program is malformed.
+-}
 correctBrackets : String -> Bool
 correctBrackets s = (occurences '[' s') == (occurences ']' s') where
   s' = unpack s
 
+{-
+  This function determines whether there are
+  at least as many '>'s as '<'s to decrease
+  the likelihood that the pointer goes off the
+  tape. Note that a program's having more
+  decrements than increments doesn't necessarily
+  imply that the pointer goes off the tape.
+-}
 correctPointer : String -> Bool
 correctPointer s = (occurences '>' s') >= (occurences '<' s') where
   s' = unpack s
 
+{-
+  Given a String, this function will perform
+  correctChars, correctBrackets, and correctPointer
+  and print the results of the test to the user.
+-}
 check : String -> IO ()
 check s = do
   if correctChars s
@@ -45,10 +103,38 @@ check s = do
     then putStrLn "There are at least as many pointer increment symbols as decrement symbols. Note that this does not guarantee that the pointer won't go past the tape."
     else putStrLn "Warning: more pointer decrement symbols than increment symbols. Depending on how you use pointer increments and decrements in loops, this may be inconsequential."
 
+{-
+  Given a Char, this function will output the
+  appropriate Brainfuck command.
+-}
+partial
 translate : Char -> BrainfuckCommand
+translate '>' = INCP
+translate '<' = DECP
+translate '+' = INCD
+translate '-' = DECD
+translate '.' = OUTB
+translate ',' = ACCB
+translate '[' = JUMP
+translate ']' = BACK
 
-modifyIndex : Vect m n -> Int -> Vect m n
+{-
+  Given a String, this function will output
+  a List of the corresponding Brainfuck commands.
+-}
+compile : String -> List BrainfuckCommand
+compile s = compile' $ unpack s where
+  compile' : List Char -> List BrainfuckCommand
+  compile' [] = []
+  compile' (x :: xs) = translate x :: compile' xs
 
-findNext : Vect m n -> Char -> Int
 
-findPrevious : Vect m n -> Char -> Int
+--------------------------------------------------
+-----------------------RUN------------------------
+--------------------------------------------------
+
+{-
+  Create a list of 1000 zeroes.
+-}
+tape : List Int
+tape = replicate 1000 0
