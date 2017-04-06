@@ -139,13 +139,19 @@ compile s = compile' $ unpack s where
 tape : List Int
 tape = replicate 1000 0
 
-run : List BrainfuckCommand -> Vect n m -> Int -> IO ()
-run [] ys x = putStrLn "\nProcess completed successfully."
-run (INCP :: xs) ys x = ?run_rhs_3
-run (DECP :: xs) ys x = ?run_rhs_4
-run (INCD :: xs) ys x = ?run_rhs_5
-run (DECD :: xs) ys x = ?run_rhs_6
-run (OUTB :: xs) ys x = ?run_rhs_7
+run : List BrainfuckCommand -> Vect 1000 Int -> Int -> IO ()
+run []           ys x = putStrLn "\nProcess completed successfully."
+run (INCP :: xs) ys x = if x == 999
+                          then putStrLn "Error: pointer is out of bounds."
+                          else run xs ys (x + 1)
+run (DECP :: xs) ys x = if x == 0
+                          then putStrLn "Error: pointer is out of bounds."
+                          else run xs ys (x - 1)
+run (INCD :: xs) ys x = run xs (updateAt (restrict 999 (cast x)) (\x => x + 1) ys) x
+run (DECD :: xs) ys x = run xs (updateAt (restrict 999 (cast x)) (\x => x - 1) ys) x
+run (OUTB :: xs) ys x = do
+                          print $ chr $ Data.Vect.index (restrict 999 (cast x)) ys
+                          run xs ys x
 run (ACCB :: xs) ys x = ?run_rhs_8
 run (JUMP :: xs) ys x = ?run_rhs_9
 run (BACK :: xs) ys x = ?run_rhs_10
