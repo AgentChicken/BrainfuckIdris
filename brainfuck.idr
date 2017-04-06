@@ -3,7 +3,7 @@ import Data.Vect
 import Debug.Error
 
 --------------------------------------------------
--------------------COMPILATION--------------------
+---------------------COMPILE----------------------
 --------------------------------------------------
 
 {-
@@ -138,3 +138,14 @@ compile s = compile' $ unpack s where
 -}
 tape : List Int
 tape = replicate 1000 0
+
+run : List BrainfuckCommand -> Vect n m -> Int -> IO ()
+run [] ys x = putStrLn "\nProcess completed successfully."
+run (INCP :: xs) ys x = ?run_rhs_3
+run (DECP :: xs) ys x = ?run_rhs_4
+run (INCD :: xs) ys x = ?run_rhs_5
+run (DECD :: xs) ys x = ?run_rhs_6
+run (OUTB :: xs) ys x = ?run_rhs_7
+run (ACCB :: xs) ys x = ?run_rhs_8
+run (JUMP :: xs) ys x = ?run_rhs_9
+run (BACK :: xs) ys x = ?run_rhs_10
