@@ -152,6 +152,8 @@ run (DECD :: xs) ys x = run xs (updateAt (restrict 999 (cast x)) (\x => x - 1) y
 run (OUTB :: xs) ys x = do
                           print $ chr $ Data.Vect.index (restrict 999 (cast x)) ys
                           run xs ys x
-run (ACCB :: xs) ys x = ?run_rhs_8
+run (ACCB :: xs) ys x = do
+                          input <- getChar
+                          run xs (updateAt (restrict 999 (cast x)) (\x => input) ys) x
 run (JUMP :: xs) ys x = ?run_rhs_9
 run (BACK :: xs) ys x = ?run_rhs_10
